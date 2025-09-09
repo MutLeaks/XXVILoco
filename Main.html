@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>XXVILoco</title>
+  <style>
+    body, html {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-family: Arial, sans-serif;
+      color: white;
+      overflow: hidden;
+    }
+
+    /* Background video */
+    #bg-video {
+      position: fixed;
+      right: 0;
+      bottom: 0;
+      min-width: 100%;
+      min-height: 100%;
+      z-index: -1;
+      object-fit: cover;
+    }
+
+    .container {
+      background: rgba(0, 0, 0, 0.6);
+      padding: 20px;
+      height: 100%;
+      overflow-y: auto;
+      overflow-x: hidden; /* prevent horizontal scroll */
+      display: flex;
+      justify-content: flex-start;
+      box-sizing: border-box;
+    }
+
+    .controls {
+      margin: 10px 0 20px 0;
+      width: 100%;
+    }
+
+    select {
+      padding: 5px 10px;
+      font-size: 16px;
+      border-radius: 5px;
+      border: none;
+    }
+
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      max-width: 100%;
+      table-layout: fixed;
+    }
+
+    th, td {
+      padding: 4px 6px;
+      text-align: left;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+      font-size: 14px;
+    }
+
+    th {
+      color: #ff3333;
+      text-transform: uppercase;
+      cursor: pointer;
+    }
+
+    tr:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .player-portrait {
+      display: flex;
+      align-items: center;
+      min-width: 150px;
+    }
+
+    .player-portrait img {
+      width: 80px;
+      height: 80px;
+      margin-right: 6px;
+      border-radius: 8px;
+      object-fit: cover;
+    }
+
+    .player-portrait a {
+      display: flex;
+      align-items: center;
+      text-decoration: none;
+      color: inherit;
+      width: 100%;
+    }
+  </style>
+</head>
+<body>
+  <!-- Background Video -->
+  <video autoplay muted loop id="bg-video">
+    <source src="mainmenu.mp4" type="video/mp4">
+  </video>
+
+  <div class="container">
+    <div style="width: 100%">
+      <!-- Position Dropdown -->
+      <div class="controls">
+        <label for="position">Select Position: </label>
+        <select id="position">
+          <option value="QB">Quarterback</option>
+          <option value="HB">HalfBack</option>
+          <option value="WR">Wide Receiver</option>
+        </select>
+      </div>
+
+      <!-- Stats Table -->
+      <table id="statsTable">
+        <thead>
+          <tr id="tableHeaders"></tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    const statsConfig = {
+      QB: ["PLAYER", "POS", "POCKET", "SCRAMBLE", "BALLCARRIER"],
+      HB: ["PLAYER", "POS", "BALLCARRIER"],
+      WR: ["PLAYER", "POS", "BALLCARRIER", "RELEASE", "CUTMOVE"]
+    };
+
+    const sampleData = [
+      {PLAYER: "Josh Allen", PORTRAIT: "JoshAllen.png", POS: "QB", POCKET: "InPocket.Sig.JoshAllen", SCRAMBLE: "Scramble.Sig.JoshAllen", BALLCARRIER: "BC_SIG_JOSHALLEN", LINK: "https://www.mut.gg/players/?name=josh+allen&market=5&positions=QB%2CHB%2CFB%2CWR%2CTE"},
+	  {PLAYER: "Jalen Hurts", PORTRAIT: "JalenHurts.png", POS: "QB", POCKET: "InPocket.Sig.JalenHurts", SCRAMBLE: "Scramble.Sig.JalenHurts", BALLCARRIER: "BC_SIG_JALENHURTS", LINK: "https://www.mut.gg/players/?name=jalen+hurts&market=5&positions=QB%2CHB%2CFB%2CWR%2CTE"},
+ 	  {PLAYER: "Kyler Murray", PORTRAIT: "KylerMurray.png", POS: "QB", POCKET: "", SCRAMBLE: "Scramble.Sig.KylerMurray", BALLCARRIER: "BC_SIG_KYLERMURRAY", LINK: "https://www.mut.gg/players/?name=Kyler+Murray&market=5&positions=QB%2CHB%2CFB%2CWR%2CTE"},
+	  {PLAYER: "Patrick Mahomes", PORTRAIT: "PatrickMahomes.png", POS: "QB", POCKET: "", SCRAMBLE: "Scramble.Sig.PatrickMahomes", BALLCARRIER: "BC_SIG_PATRICKMAHOMES", LINK: "https://www.mut.gg/players/?name=Patrick+Mahomes&market=5&positions=QB%2CHB%2CFB%2CWR%2CTE"},
+ 	  {PLAYER: "Caleb Williams", PORTRAIT: "CalebWilliams.png", POS: "QB", POCKET: "", SCRAMBLE: "Scramble.Sig.CalebWilliams", BALLCARRIER: "BC_SIG_CALEBWILLIAMS", LINK: "https://www.mut.gg/players/?name=Caleb+Williams&market=5&positions=QB%2CHB%2CFB%2CWR%2CTE"},
+ 	  {PLAYER: "Bo Nix", PORTRAIT: "BoNix.png", POS: "QB", POCKET: "", SCRAMBLE: "Scramble.TwoHand", BALLCARRIER: "", LINK: "https://www.mut.gg/players/?name=Bo+Nix&market=5&positions=QB"},
+	  {PLAYER: "Joe Burrow", PORTRAIT: "JoeBurrow.png", POS: "QB", POCKET: "", SCRAMBLE: "Scramble.TwoHand", BALLCARRIER: "", LINK: "https://www.mut.gg/players/?name=Joe+Burrow&market=5&positions=QB"},
+	  {PLAYER: "Jared Goff", PORTRAIT: "JaredGoff.png", POS: "QB", POCKET: "", SCRAMBLE: "Scramble.TwoHand", BALLCARRIER: "", LINK: "https://www.mut.gg/players/?name=Jared+Goff&market=5&positions=QB"},
+	  
+	  {PLAYER: "Alvin Kamara", PORTRAIT: "AlvinKamara.png", POS: "HB", BALLCARRIER: "AlvinKamara_Loco", LINK: "https://www.mut.gg/players/?name=Alvin+Kamara&market=5&positions=QB%2CHB%2CFB%2CWR%2CTE"},
+	  {PLAYER: "Christian Mccaffrey", PORTRAIT: "ChristianMccaffrey.png", POS: "HB", BALLCARRIER: "ChristianMcCaffery_Loco", LINK: "https://www.mut.gg/players/?name=Christian+Mccaffrey&market=5&positions=QB%2CHB%2CFB%2CWR%2CTE"},
+	  {PLAYER: "Derrick Henry", PORTRAIT: "DerrickHenry.png", POS: "HB", BALLCARRIER: "DerrickHenry_Loco", LINK: "https://www.mut.gg/players/?name=Derrick+Henry&market=5&positions=QB%2CHB%2CFB%2CWR%2CTE"},
+	  {PLAYER: "Ezekiel Elliott", PORTRAIT: "EzekielElliott.png", POS: "HB", BALLCARRIER: "Ezekiel Elliott_Loco", LINK: "https://www.mut.gg/players/?name=Ezekiel+Elliott&market=5&positions=QB%2CHB%2CFB%2CWR%2CTE"},
+	  {PLAYER: "Isaih Pacheco", PORTRAIT: "IsaihPacheco.png", POS: "HB", BALLCARRIER: "IsiahPacheco_Loco", LINK: "https://www.mut.gg/players/?name=Isiah+Pacheco&market=5&positions=QB%2CHB%2CFB%2CWR%2CTE"},
+	  {PLAYER: "Saquon Barkley", PORTRAIT: "SaquonBarkley.png", POS: "HB", BALLCARRIER: "SaquonBarkley_Loco", LINK: "https://www.mut.gg/players/?name=Saquon+Barkley&market=5&positions=QB%2CHB%2CFB%2CWR%2CTE"},
+	  
+	  {PLAYER: "Tyreek Hill", PORTRAIT: "TyreekHill.png", POS: "WR", BALLCARRIER: "TyreekHill_Loco", RELEASE: "WR_Sig_Start_TyreekHill", CUTMOVE: "", LINK: "https://www.mut.gg/players/?name=Tyreek+Hill&market=5&positions=QB%2CHB%2CFB%2CWR%2CTE"},
+	  {PLAYER: "Julian Edelman", PORTRAIT: "JulianEdelman.png", POS: "WR", BALLCARRIER: "JulianEdelman_Loco", RELEASE: "", CUTMOVE: "", LINK: "https://www.mut.gg/players/?name=Julian+Edelman&market=5&positions=QB%2CHB%2CFB%2CWR%2CTE"},
+	  
+	  
+	  {PLAYER: "Jerry Jeudy", PORTRAIT: "JerryJeudy.png", POS: "WR", BALLCARRIER: "", RELEASE: "", CUTMOVE: "WR_Sig_CutMove_JerryJeudy", LINK: "https://www.mut.gg/players/?name=Jerry+Jeudy&market=5&positions=QB%2CHB%2CFB%2CWR%2CTE"},
+	  {PLAYER: "Jarvis Landry", PORTRAIT: "JarvisLandry.png", POS: "WR", BALLCARRIER: "", RELEASE: "", CUTMOVE: "WR_Sig_CutMove_JarvisLandry", LINK: "https://www.mut.gg/players/?name=Jarvis+Landry&market=5&positions=QB%2CHB%2CFB%2CWR%2CTE"},
+	  
+	  {PLAYER: "Stefon Diggs", PORTRAIT: "StefonDiggs.png", POS: "WR", BALLCARRIER: "", RELEASE: "WR_Sig_Start_StefonDiggs", CUTMOVE: "", LINK: "https://www.mut.gg/players/?name=Stefon+Diggs&market=5&positions=HB%2CFB%2CWR%2CTE"},
+      {PLAYER: "Mike Evans", PORTRAIT: "MikeEvans.png", POS: "WR", BALLCARRIER: "", RELEASE: "WR_Sig_Start_MikeEvans", CUTMOVE: "", LINK: "https://www.mut.gg/players/?name=Mike+Evans&market=5&positions=HB%2CFB%2CWR%2CTE"},
+      {PLAYER: "Michael Thomas", PORTRAIT: "MichaelThomas.png", POS: "WR", BALLCARRIER: "", RELEASE: "WR_Sig_Start_MichaelThomas", CUTMOVE: "", LINK: "https://www.mut.gg/players/?name=Michael+Thomas&market=5&positions=HB%2CFB%2CWR%2CTE"},
+      {PLAYER: "Keenan Allen", PORTRAIT: "KeenanAllen.png", POS: "WR", BALLCARRIER: "", RELEASE: "WR_Sig_Start_KeenanAllen", CUTMOVE: "", LINK: "https://www.mut.gg/players/?name=Keenan+Allen&market=5&positions=HB%2CFB%2CWR%2CTE"},
+      {PLAYER: "Justin Jefferson", PORTRAIT: "JustinJefferson.png", POS: "WR", BALLCARRIER: "", RELEASE: "WR_Sig_Start_JustinJefferson", CUTMOVE: "", LINK: "https://www.mut.gg/players/?name=Justin+Jefferson&market=5&positions=HB%2CFB%2CWR%2CTE"},
+      {PLAYER: "Julio Jones", PORTRAIT: "JulioJones.png", POS: "WR", BALLCARRIER: "", RELEASE: "WR_Sig_Start_JulioJones", CUTMOVE: "WR_Sig_CutMove_JulioJones", LINK: "https://www.mut.gg/players/?name=Julio+Jones&market=5&positions=HB%2CFB%2CWR%2CTE"},
+      {PLAYER: "DK Metcalf", PORTRAIT: "DKMetcalf.png", POS: "WR", BALLCARRIER: "", RELEASE: "WR_Sig_Start_DKMetcalf", CUTMOVE: "WR_Sig_CutMove_DKMetcalf", LINK: "https://www.mut.gg/players/?name=DK+Metcalf&market=5&positions=HB%2CFB%2CWR%2CTE"},
+      {PLAYER: "Davante Adams", PORTRAIT: "DavanteAdams.png", POS: "WR", BALLCARRIER: "", RELEASE: "WR_Sig_Start_DavanteAdams", CUTMOVE: "WR_Sig_CutMove_DevanteAdams", LINK: "https://www.mut.gg/players/?name=Davante+Adams&market=5&positions=HB%2CFB%2CWR%2CTE"},
+      {PLAYER: "Deandre Hopkins", PORTRAIT: "DeandreHopkins.png", POS: "WR", BALLCARRIER: "", RELEASE: "WR_Sig_Start_DeandreHopkins", CUTMOVE: "WR_Sig_CutMove_DeandreHopkins", LINK: "https://www.mut.gg/players/?name=Deandre+Hopkins&market=5&positions=HB%2CFB%2CWR%2CTE"}
+    ];
+
+    const positionSelect = document.getElementById("position");
+    const tableHeaders = document.getElementById("tableHeaders");
+    const tableBody = document.getElementById("tableBody");
+
+    let currentSort = { key: null, asc: true };
+
+    function renderTable(pos) {
+      tableHeaders.innerHTML = "";
+      tableBody.innerHTML = "";
+
+      const headers = statsConfig[pos];
+      headers.forEach((h) => {
+        const th = document.createElement("th");
+        th.textContent = h;
+        th.addEventListener("click", () => sortTable(h));
+        tableHeaders.appendChild(th);
+      });
+
+      updateTableRows(pos, headers);
+    }
+
+    function updateTableRows(pos, headers) {
+      tableBody.innerHTML = "";
+      let filtered = sampleData.filter(p => p.POS === pos);
+
+      // Apply sorting
+      if (currentSort.key) {
+        const key = currentSort.key;
+        const asc = currentSort.asc;
+        filtered.sort((a, b) => {
+          let valA = a[key] ?? "", valB = b[key] ?? "";
+          if (typeof valA === "string") valA = valA.toUpperCase();
+          if (typeof valB === "string") valB = valB.toUpperCase();
+          if (valA < valB) return asc ? -1 : 1;
+          if (valA > valB) return asc ? 1 : -1;
+          return 0;
+        });
+      }
+
+      filtered.forEach(player => {
+        const tr = document.createElement("tr");
+
+        // If player has link, make row clickable
+        if (player.LINK) {
+          tr.style.cursor = "pointer";
+          tr.addEventListener("click", () => {
+            window.open(player.LINK, "_blank");
+          });
+        }
+
+        headers.forEach(h => {
+          const td = document.createElement("td");
+          if (h === "PLAYER") {
+            td.classList.add("player-portrait");
+            if (player.LINK) {
+              td.innerHTML = `
+                <a href="${player.LINK}" target="_blank">
+                  <img src="${player.PORTRAIT}" alt="${player.PLAYER}">
+                  ${player.PLAYER}
+                </a>
+              `;
+            } else {
+              td.innerHTML = `<img src="${player.PORTRAIT}" alt="${player.PLAYER}"> ${player.PLAYER}`;
+            }
+          } else {
+            td.textContent = player[h] ?? "-";
+          }
+          tr.appendChild(td);
+        });
+        tableBody.appendChild(tr);
+      });
+    }
+
+    function sortTable(key) {
+      if (currentSort.key === key) {
+        currentSort.asc = !currentSort.asc;
+      } else {
+        currentSort.key = key;
+        currentSort.asc = true;
+      }
+      updateTableRows(positionSelect.value, statsConfig[positionSelect.value]);
+    }
+
+    positionSelect.addEventListener("change", e => {
+      currentSort = { key: null, asc: true };
+      renderTable(e.target.value);
+    });
+
+    // Initial load
+    renderTable(positionSelect.value);
+  </script>
+</body>
+</html>
