@@ -28,14 +28,14 @@
       position: fixed;
       bottom: 0;
       width: 100%;
-      padding: 0px 0px;   /* slimmer padding */
+      padding: 2px 0;
       background: rgba(0, 0, 0, 0.6);
       color: white;
-      font-size: 9px;     /* smaller font */
+      font-size: 9px;
       font-family: Arial, sans-serif;
       text-align: center;
-      z-index: 1;
-      line-height: 1;   /* tighter line spacing */
+      z-index: 10;
+      line-height: 1.1;
     }
 
     .legal-disclaimer a {
@@ -43,28 +43,20 @@
       text-decoration: underline;
     }
 
-    @media (max-width: 768px) {
-      .legal-disclaimer {
-        font-size: 8px;
-        padding: 0px 0px;
-      }
-    }
-
-
-
     .container {
       background: rgba(0, 0, 0, 0.6);
       padding: 20px;
       height: 100%;
       overflow-y: auto;
-      overflow-x: hidden; /* prevent horizontal scroll */
+      overflow-x: hidden;
       display: flex;
-      justify-content: flex-start;
+      flex-direction: column;
       box-sizing: border-box;
+      padding-bottom: 40px; 
     }
 
     .controls {
-      margin: 10px 0 20px 0;
+      margin: 5px 0 15px 0;
       width: 100%;
     }
 
@@ -73,6 +65,8 @@
       font-size: 16px;
       border-radius: 5px;
       border: none;
+      background: #333;
+      color: white;
     }
 
     table {
@@ -83,13 +77,11 @@
     }
 
     th, td {
-      padding: 4px 6px;
+      padding: 8px 6px;
       text-align: left;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
       border-bottom: 1px solid rgba(255, 255, 255, 0.2);
       font-size: 14px;
+      position: relative;
     }
 
     th {
@@ -105,44 +97,87 @@
     .player-portrait {
       display: flex;
       align-items: center;
-      min-width: 150px;
+      min-width: 180px;
     }
 
     .player-portrait img {
       width: 66px;
       height: 66px;
-      margin-right: 6px;
+      margin-right: 10px;
       border-radius: 8px;
       object-fit: cover;
+      border: 1px solid rgba(255,255,255,0.2);
     }
 
-    .player-portrait a {
+    .cell-content {
       display: flex;
       align-items: center;
-      text-decoration: none;
-      color: inherit;
-      width: 100%;
+      justify-content: flex-start;
+      white-space: nowrap;
+    }
+
+    .stat-text {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 85%;
+    }
+
+    .info-icon {
+      background: #ff3333;
+      color: white;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      font-size: 10px;
+      font-weight: bold;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-left: 5px;
+      cursor: help;
+      flex-shrink: 0;
+    }
+
+    .ui-popup {
+      visibility: hidden;
+      width: 180px;
+      background-color: #111;
+      color: #fff;
+      text-align: center;
+      border: 1px solid #ff3333;
+      border-radius: 4px;
+      padding: 8px;
+      position: absolute;
+      z-index: 1000;
+      bottom: 110%;
+      left: 50%;
+      transform: translateX(-50%);
+      opacity: 0;
+      transition: opacity 0.2s;
+      font-size: 11px;
+      white-space: normal;
+      pointer-events: none;
+      box-shadow: 0px 4px 12px rgba(0,0,0,0.9);
+    }
+
+    .info-icon:hover .ui-popup {
+      visibility: visible;
+      opacity: 1;
+    }
+
+    @media (max-width: 768px) {
+      .legal-disclaimer { font-size: 8px; }
+      th, td { font-size: 12px; }
     }
   </style>
 </head>
-  <!-- Legal Disclaimer -->
-  <div class="legal-disclaimer">
-    <p>
-      <strong>Notice of Non-Affiliation and Disclaimer</strong><br/>
-      We are not affiliated, associated, authorized, endorsed by, or in any way officially connected with Electronic Arts Inc., or any of its subsidiaries or affiliates. The official Electronic Arts website can be found at 
-      <a href="https://www.ea.com/" target="_blank" rel="noopener noreferrer">https://www.ea.com/</a>.<br/>
-      The names, images, video, marks, and any related content referencing Madden NFL or Electronic Arts are trademarks or registered trademarks of their respective owners. All assets used in this project are for creative and educational purposes only.
-    </p>
-  </div>
 <body>
-  <!-- Video -->
   <video autoplay muted loop id="bg-video">
     <source src="Mainmenu.mp4" type="video/mp4">
   </video>
 
   <div class="container">
     <div style="width: 100%">
-      <!-- Position Dropdown -->
       <div class="controls">
         <label for="position">Select Position: </label>
         <select id="position">
@@ -152,7 +187,6 @@
         </select>
       </div>
 
-      <!-- Stats Table -->
       <table id="statsTable">
         <thead>
           <tr id="tableHeaders"></tr>
@@ -162,114 +196,168 @@
     </div>
   </div>
 
+  <div class="legal-disclaimer">
+    <p>
+      <strong>Notice of Non-Affiliation and Disclaimer</strong><br/>
+      We are not affiliated, associated, authorized, endorsed by, or in any way officially connected with Electronic Arts Inc., or any of its subsidiaries or affiliates.
+      The official Electronic Arts website can be found at 
+      <a href="https://www.ea.com/" target="_blank" rel="noopener noreferrer">https://www.ea.com/</a>.<br/>
+      Madden NFL and all related marks and images are trademarks or registered trademarks of their respective owners.
+      This project is for creative and educational purposes only.
+    </p>
+  </div>
+
   <script>
+const animDescriptions = {
+  // --- Body Types ---
+  "Agile Small": "5'10 and below; under 246lbs",
+  "Agile": "5'11 - 6'3; under 246lbs",
+  "Agile Tall": "6'4+; under 246lbs",
+  "Bruiser": "246+lbs",
+
+  // --- Quarterback Animations ---
+  "InPocket.Sig.JoshAllen": "Idle - ConstantCycle",
+  "Scramble.Sig.JoshAllen": "Constant Cycle - Start - Stop",
+  "BC_SIG_JOSHALLEN": "Default - Constant Cycle",
+  "InPocket.Sig.JalenHurts": "Idle - ConstantCycle",
+  "Scramble.Sig.JalenHurts": "Constant Cycle - Idle - Start",
+  "BC_SIG_JALENHURTS": "Default - Constant Cycle - Start",
+  "Scramble.Sig.KylerMurray": "Constant Cycle - Drastic Turn - Idle - Start - Stop",
+  "BC_SIG_KYLERMURRAY": "Default - Constant Cycle - Stop",
+  "Scramble.Sig.PatrickMahomes": "Constant Cycle - Idle - Start",
+  "BC_SIG_PATRICKMAHOMES": "Default - Constant Cycle",
+  "Scramble.Sig.CalebWilliams": "Constant Cycle - Start - Stop",
+  "BC_SIG_CALEBWILLIAMS": "Default - Constant Cycle",
+  "BC_SIG_CAMNEWTON": "Constant Cycle",
+  "Scramble.TwoHand": "Constant Cycle - Drastic Turn - Idle - Stop - Start - Turn In Place",
+
+  // --- Halfback Animations ---
+  "AlvinKamara_Loco": "Constant Cycle",
+  "ChristianMcCaffery_Loco": "Default - Constant Cycle - Start",
+  "DerrickHenry_Loco": "Default - Constant Cycle - Start",
+  "Ezekiel Elliott_Loco": "Constant Cycle",
+  "IsiahPacheco_Loco": "Default - Start - Constant Cycle - Idle",
+  "SaquonBarkley_Loco": "Constant Cycle",
+
+  // --- Wide Receiver Animations ---
+  "WR_Sig_Start_TyreekHill": "4 Release Moves, 2 Cut Moves",
+  "TyreekHill_Loco": "Default - Constant Cycle - Start",
+  "JulianEdelman_Loco": "Constant Cycle",
+  "WR_Sig_CutMove_JerryJeudy": "9 Cut Moves [5x Generic Cuts, 2x Fake In Out Cuts, 1x Hop Cut, 1x Quick Hop Cut]",
+  "WR_Sig_CutMove_JarvisLandry": "10 Cut Moves [5x In Cut, 2x Footfire Cut, 2x Generic, 1x Post Cut]",
+  "WR_Sig_Start_StefonDiggs": "10 Cut Moves [4x Dragstep Cut, 3x Generic Cut, 2x Out Cut, 1x Whip Cut]",
+  "WR_Sig_Start_MikeEvans": "3 Release Moves, 3 Cut Moves [3x Post Cuts]",
+  "WR_Sig_Start_MichaelThomas": "5x Cut Moves [1x QuickAvoid Cut]",
+  "WR_Sig_Start_KeenanAllen": "6x Release Moves [3x Footfire, 3x HopStep], 1x Cut Move [Hop Cut]",
+  "WR_Sig_Start_JustinJefferson": "7x Release Moves [4x Changeup, 3x Hopstep], 3x Cut Moves",
+  "WR_Sig_Start_JulioJones": "6x Release Moves, 4x Cut Moves [4x Comeback Cut]",
+  "WR_Sig_CutMove_JulioJones": "6 Cut Moves [4x Generic Cut, 1x Footfire Cut, 1x Post Cut]",
+  "WR_Sig_Start_DKMetcalf": "1x Release Move, 4x Cut Moves [3x Comeback Cut, 1x Generic]",
+  "WR_Sig_CutMove_DKMetcalf": "9x Cut Moves [9x Generic Cut Moves]",
+  "WR_Sig_Start_DavanteAdams": "6x Release Moves [2x Singlee Move Hop, 2x Single Move Short, 2x Hop], 3x Cut Moves [2x Footfire, 1x Shimmy]",
+  "WR_Sig_CutMove_DevanteAdams": "2x Release Moves [1x Hop Step, 1x Single Move Hop], 8x Cut Moves [ 4x Footfire, 1x Post Cut, 1x Quick Hop Cut, 1x Shimmy, 1x Generic]",
+  "WR_Sig_Start_DeandreHopkins": "12x Release Moves [9x Slowrelease, 3x Footfire], 3x Cut [3x Quick Hop Cut]",
+  "WR_Sig_CutMove_DeandreHopkins": "3x Release Moves [3X Slowrelease], 8x Cut Moves [3x Quick Hop Cut, 3x Generic Cut, 1x Post Cut, 1x Footfire]",
+
+  // --- Defaults ---
+  "default": "A unique signature animation set specific to this player's playstyle."
+};
+
     const statsConfig = {
-      QB: ["PLAYER", "POS", "POCKET", "SCRAMBLE", "BALLCARRIER"],
-      HB: ["PLAYER", "POS", "BALLCARRIER"],
-      WR: ["PLAYER", "POS", "BALLCARRIER", "RELEASE", "CUTMOVE"]
+      QB: ["PLAYER", "POS", "BODYTYPE", "POCKET", "SCRAMBLE", "BALLCARRIER"],
+      HB: ["PLAYER", "POS", "BODYTYPE", "BALLCARRIER"],
+      WR: ["PLAYER", "POS", "BODYTYPE", "BALLCARRIER", "RELEASE", "CUTMOVE"]
     };
 
     const sampleData = [
-      {PLAYER: "Josh Allen", PORTRAIT: "JoshAllen.png", POS: "QB", POCKET: "InPocket.Sig.JoshAllen", SCRAMBLE: "Scramble.Sig.JoshAllen", BALLCARRIER: "BC_SIG_JOSHALLEN", LINK: "https://www.mut.gg/players/?name=josh+allen&market=5&positions=QB%2CHB%2CFB%2CWR%2CTE"},
-	  {PLAYER: "Jalen Hurts", PORTRAIT: "JalenHurts.png", POS: "QB", POCKET: "InPocket.Sig.JalenHurts", SCRAMBLE: "Scramble.Sig.JalenHurts", BALLCARRIER: "BC_SIG_JALENHURTS", LINK: "https://www.mut.gg/players/?name=jalen+hurts&market=5&positions=QB%2CHB%2CFB%2CWR%2CTE"},
- 	  {PLAYER: "Kyler Murray", PORTRAIT: "KylerMurray.png", POS: "QB", POCKET: "", SCRAMBLE: "Scramble.Sig.KylerMurray", BALLCARRIER: "BC_SIG_KYLERMURRAY", LINK: "https://www.mut.gg/players/?name=Kyler+Murray&market=5&positions=QB%2CHB%2CFB%2CWR%2CTE"},
-	  {PLAYER: "Patrick Mahomes", PORTRAIT: "PatrickMahomes.png", POS: "QB", POCKET: "", SCRAMBLE: "Scramble.Sig.PatrickMahomes", BALLCARRIER: "BC_SIG_PATRICKMAHOMES", LINK: "https://www.mut.gg/players/?name=Patrick+Mahomes&market=5&positions=QB%2CHB%2CFB%2CWR%2CTE"},
- 	  {PLAYER: "Caleb Williams", PORTRAIT: "CalebWilliams.png", POS: "QB", POCKET: "", SCRAMBLE: "Scramble.Sig.CalebWilliams", BALLCARRIER: "BC_SIG_CALEBWILLIAMS", LINK: "https://www.mut.gg/players/?name=Caleb+Williams&market=5&positions=QB%2CHB%2CFB%2CWR%2CTE"},
- 	  {PLAYER: "Bo Nix", PORTRAIT: "BoNix.png", POS: "QB", POCKET: "", SCRAMBLE: "Scramble.TwoHand", BALLCARRIER: "", LINK: "https://www.mut.gg/players/?name=Bo+Nix&market=5&positions=QB"},
-	  {PLAYER: "Joe Burrow", PORTRAIT: "JoeBurrow.png", POS: "QB", POCKET: "", SCRAMBLE: "Scramble.TwoHand", BALLCARRIER: "", LINK: "https://www.mut.gg/players/?name=Joe+Burrow&market=5&positions=QB"},
-	  {PLAYER: "Jared Goff", PORTRAIT: "JaredGoff.png", POS: "QB", POCKET: "", SCRAMBLE: "Scramble.TwoHand", BALLCARRIER: "", LINK: "https://www.mut.gg/players/?name=Jared+Goff&market=5&positions=QB"},
-	  
-	  {PLAYER: "Alvin Kamara", PORTRAIT: "AlvinKamara.png", POS: "HB", BALLCARRIER: "AlvinKamara_Loco", LINK: "https://www.mut.gg/players/?name=Alvin+Kamara&market=5&positions=QB%2CHB%2CFB%2CWR%2CTE"},
-	  {PLAYER: "Christian Mccaffrey", PORTRAIT: "ChristianMccaffrey.png", POS: "HB", BALLCARRIER: "ChristianMcCaffery_Loco", LINK: "https://www.mut.gg/players/?name=Christian+Mccaffrey&market=5&positions=QB%2CHB%2CFB%2CWR%2CTE"},
-	  {PLAYER: "Derrick Henry", PORTRAIT: "DerrickHenry.png", POS: "HB", BALLCARRIER: "DerrickHenry_Loco", LINK: "https://www.mut.gg/players/?name=Derrick+Henry&market=5&positions=QB%2CHB%2CFB%2CWR%2CTE"},
-	  {PLAYER: "Ezekiel Elliott", PORTRAIT: "EzekielElliott.png", POS: "HB", BALLCARRIER: "Ezekiel Elliott_Loco", LINK: "https://www.mut.gg/players/?name=Ezekiel+Elliott&market=5&positions=QB%2CHB%2CFB%2CWR%2CTE"},
-	  {PLAYER: "Isaih Pacheco", PORTRAIT: "IsaihPacheco.png", POS: "HB", BALLCARRIER: "IsiahPacheco_Loco", LINK: "https://www.mut.gg/players/?name=Isiah+Pacheco&market=5&positions=QB%2CHB%2CFB%2CWR%2CTE"},
-	  {PLAYER: "Saquon Barkley", PORTRAIT: "SaquonBarkley.png", POS: "HB", BALLCARRIER: "SaquonBarkley_Loco", LINK: "https://www.mut.gg/players/?name=Saquon+Barkley&market=5&positions=QB%2CHB%2CFB%2CWR%2CTE"},
-	  
-	  {PLAYER: "Tyreek Hill", PORTRAIT: "TyreekHill.png", POS: "WR", BALLCARRIER: "TyreekHill_Loco", RELEASE: "WR_Sig_Start_TyreekHill", CUTMOVE: "", LINK: "https://www.mut.gg/players/?name=Tyreek+Hill&market=5&positions=QB%2CHB%2CFB%2CWR%2CTE"},
-	  {PLAYER: "Julian Edelman", PORTRAIT: "JulianEdelman.png", POS: "WR", BALLCARRIER: "JulianEdelman_Loco", RELEASE: "", CUTMOVE: "", LINK: "https://www.mut.gg/players/?name=Julian+Edelman&market=5&positions=QB%2CHB%2CFB%2CWR%2CTE"},
-	  
-	  
-	  {PLAYER: "Jerry Jeudy", PORTRAIT: "JerryJeudy.png", POS: "WR", BALLCARRIER: "", RELEASE: "", CUTMOVE: "WR_Sig_CutMove_JerryJeudy", LINK: "https://www.mut.gg/players/?name=Jerry+Jeudy&market=5&positions=QB%2CHB%2CFB%2CWR%2CTE"},
-	  {PLAYER: "Jarvis Landry", PORTRAIT: "JarvisLandry.png", POS: "WR", BALLCARRIER: "", RELEASE: "", CUTMOVE: "WR_Sig_CutMove_JarvisLandry", LINK: "https://www.mut.gg/players/?name=Jarvis+Landry&market=5&positions=QB%2CHB%2CFB%2CWR%2CTE"},
-	  
-	  {PLAYER: "Stefon Diggs", PORTRAIT: "StefonDiggs.png", POS: "WR", BALLCARRIER: "", RELEASE: "WR_Sig_Start_StefonDiggs", CUTMOVE: "", LINK: "https://www.mut.gg/players/?name=Stefon+Diggs&market=5&positions=HB%2CFB%2CWR%2CTE"},
-      {PLAYER: "Mike Evans", PORTRAIT: "MikeEvans.png", POS: "WR", BALLCARRIER: "", RELEASE: "WR_Sig_Start_MikeEvans", CUTMOVE: "", LINK: "https://www.mut.gg/players/?name=Mike+Evans&market=5&positions=HB%2CFB%2CWR%2CTE"},
-      {PLAYER: "Michael Thomas", PORTRAIT: "MichaelThomas.png", POS: "WR", BALLCARRIER: "", RELEASE: "WR_Sig_Start_MichaelThomas", CUTMOVE: "", LINK: "https://www.mut.gg/players/?name=Michael+Thomas&market=5&positions=HB%2CFB%2CWR%2CTE"},
-      {PLAYER: "Keenan Allen", PORTRAIT: "KeenanAllen.png", POS: "WR", BALLCARRIER: "", RELEASE: "WR_Sig_Start_KeenanAllen", CUTMOVE: "", LINK: "https://www.mut.gg/players/?name=Keenan+Allen&market=5&positions=HB%2CFB%2CWR%2CTE"},
-      {PLAYER: "Justin Jefferson", PORTRAIT: "JustinJefferson.png", POS: "WR", BALLCARRIER: "", RELEASE: "WR_Sig_Start_JustinJefferson", CUTMOVE: "", LINK: "https://www.mut.gg/players/?name=Justin+Jefferson&market=5&positions=HB%2CFB%2CWR%2CTE"},
-      {PLAYER: "Julio Jones", PORTRAIT: "JulioJones.png", POS: "WR", BALLCARRIER: "", RELEASE: "WR_Sig_Start_JulioJones", CUTMOVE: "WR_Sig_CutMove_JulioJones", LINK: "https://www.mut.gg/players/?name=Julio+Jones&market=5&positions=HB%2CFB%2CWR%2CTE"},
-      {PLAYER: "DK Metcalf", PORTRAIT: "DKMetcalf.png", POS: "WR", BALLCARRIER: "", RELEASE: "WR_Sig_Start_DKMetcalf", CUTMOVE: "WR_Sig_CutMove_DKMetcalf", LINK: "https://www.mut.gg/players/?name=DK+Metcalf&market=5&positions=HB%2CFB%2CWR%2CTE"},
-      {PLAYER: "Davante Adams", PORTRAIT: "DavanteAdams.png", POS: "WR", BALLCARRIER: "", RELEASE: "WR_Sig_Start_DavanteAdams", CUTMOVE: "WR_Sig_CutMove_DevanteAdams", LINK: "https://www.mut.gg/players/?name=Davante+Adams&market=5&positions=HB%2CFB%2CWR%2CTE"},
-      {PLAYER: "Deandre Hopkins", PORTRAIT: "DeAndreHopkins.png", POS: "WR", BALLCARRIER: "", RELEASE: "WR_Sig_Start_DeandreHopkins", CUTMOVE: "WR_Sig_CutMove_DeandreHopkins", LINK: "https://www.mut.gg/players/?name=Deandre+Hopkins&market=5&positions=HB%2CFB%2CWR%2CTE"}
+      {PLAYER: "Josh Allen", PORTRAIT: "JoshAllen.png", POS: "QB", BODYTYPE: "Agile Tall", POCKET: "InPocket.Sig.JoshAllen", SCRAMBLE: "Scramble.Sig.JoshAllen", BALLCARRIER: "BC_SIG_JOSHALLEN", LINK: "https://www.mut.gg/players/?name=josh+allen&market=5"},
+      {PLAYER: "Jalen Hurts", PORTRAIT: "JalenHurts.png", POS: "QB", BODYTYPE: "Agile", POCKET: "InPocket.Sig.JalenHurts", SCRAMBLE: "Scramble.Sig.JalenHurts", BALLCARRIER: "BC_SIG_JALENHURTS", LINK: "https://www.mut.gg/players/?name=jalen+hurts&market=5"},
+      {PLAYER: "Kyler Murray", PORTRAIT: "KylerMurray.png", POS: "QB", BODYTYPE: "Agile Small", POCKET: "", SCRAMBLE: "Scramble.Sig.KylerMurray", BALLCARRIER: "BC_SIG_KYLERMURRAY", LINK: "https://www.mut.gg/players/?name=Kyler+Murray&market=5"},
+      {PLAYER: "Patrick Mahomes", PORTRAIT: "PatrickMahomes.png", POS: "QB", BODYTYPE: "Agile", POCKET: "", SCRAMBLE: "Scramble.Sig.PatrickMahomes", BALLCARRIER: "BC_SIG_PATRICKMAHOMES", LINK: "https://www.mut.gg/players/?name=Patrick+Mahomes&market=5"},
+      {PLAYER: "Caleb Williams", PORTRAIT: "CalebWilliams.png", POS: "QB", BODYTYPE: "Agile", POCKET: "", SCRAMBLE: "Scramble.Sig.CalebWilliams", BALLCARRIER: "BC_SIG_CALEBWILLIAMS", LINK: "https://www.mut.gg/players/?name=Caleb+Williams&market=5"},
+      {PLAYER: "Cam Newton", PORTRAIT: "CamNewton.png", POS: "QB", BODYTYPE: "Agile Tall", POCKET: "", SCRAMBLE: "", BALLCARRIER: "BC_SIG_CAMNEWTON", LINK: "https://www.mut.gg/players/?name=cam+newton&market=5"},
+      {PLAYER: "Bo Nix", PORTRAIT: "BoNix.png", POS: "QB", BODYTYPE: "Agile", POCKET: "", SCRAMBLE: "Scramble.TwoHand", BALLCARRIER: "", LINK: "https://www.mut.gg/players/?name=Bo+Nix&market=5"},
+      {PLAYER: "Joe Burrow", PORTRAIT: "JoeBurrow.png", POS: "QB", BODYTYPE: "Agile Tall", POCKET: "", SCRAMBLE: "Scramble.TwoHand", BALLCARRIER: "", LINK: "https://www.mut.gg/players/?name=Joe+Burrow&market=5"},
+      {PLAYER: "Jared Goff", PORTRAIT: "JaredGoff.png", POS: "QB", BODYTYPE: "Agile Tall", POCKET: "", SCRAMBLE: "Scramble.TwoHand", BALLCARRIER: "", LINK: "https://www.mut.gg/players/?name=Jared+Goff&market=5"},
+      {PLAYER: "Alvin Kamara", PORTRAIT: "AlvinKamara.png", POS: "HB", BODYTYPE: "Agile Small", BALLCARRIER: "AlvinKamara_Loco", LINK: "https://www.mut.gg/players/?name=Alvin+Kamara&market=5"},
+      {PLAYER: "Christian Mccaffrey", PORTRAIT: "ChristianMccaffrey.png", POS: "HB", BODYTYPE: "Agile", BALLCARRIER: "ChristianMcCaffery_Loco", LINK: "https://www.mut.gg/players/?name=Christian+Mccaffrey&market=5"},
+      {PLAYER: "Derrick Henry", PORTRAIT: "DerrickHenry.png", POS: "HB", BODYTYPE: "Bruiser", BALLCARRIER: "DerrickHenry_Loco", LINK: "https://www.mut.gg/players/?name=Derrick+Henry&market=5"},
+      {PLAYER: "Ezekiel Elliott", PORTRAIT: "EzekielElliott.png", POS: "HB", BODYTYPE: "Agile", BALLCARRIER: "Ezekiel Elliott_Loco", LINK: "https://www.mut.gg/players/?name=Ezekiel+Elliott&market=5"},
+      {PLAYER: "Isaih Pacheco", PORTRAIT: "IsaihPacheco.png", POS: "HB", BODYTYPE: "Agile Small", BALLCARRIER: "IsiahPacheco_Loco", LINK: "https://www.mut.gg/players/?name=Isiah+Pacheco&market=5"},
+      {PLAYER: "Saquon Barkley", PORTRAIT: "SaquonBarkley.png", POS: "HB", BODYTYPE: "Agile", BALLCARRIER: "SaquonBarkley_Loco", LINK: "https://www.mut.gg/players/?name=Saquon+Barkley&market=5"},
+      {PLAYER: "Tyreek Hill", PORTRAIT: "TyreekHill.png", POS: "WR", BODYTYPE: "Agile Small", BALLCARRIER: "TyreekHill_Loco", RELEASE: "WR_Sig_Start_TyreekHill", CUTMOVE: "", LINK: "https://www.mut.gg/players/?name=Tyreek+Hill&market=5"},
+      {PLAYER: "Julian Edelman", PORTRAIT: "JulianEdelman.png", POS: "WR", BODYTYPE: "Agile Small", BALLCARRIER: "JulianEdelman_Loco", RELEASE: "", CUTMOVE: "", LINK: "https://www.mut.gg/players/?name=Julian+Edelman&market=5"},
+      {PLAYER: "Jerry Jeudy", PORTRAIT: "JerryJeudy.png", POS: "WR", BODYTYPE: "Agile", BALLCARRIER: "", RELEASE: "", CUTMOVE: "WR_Sig_CutMove_JerryJeudy", LINK: "https://www.mut.gg/players/?name=Jerry+Jeudy&market=5"},
+      {PLAYER: "Jarvis Landry", PORTRAIT: "JarvisLandry.png", POS: "WR", BODYTYPE: "Agile", BALLCARRIER: "", RELEASE: "", CUTMOVE: "WR_Sig_CutMove_JarvisLandry", LINK: "https://www.mut.gg/players/?name=Jarvis+Landry&market=5"},
+      {PLAYER: "Stefon Diggs", PORTRAIT: "StefonDiggs.png", POS: "WR", BODYTYPE: "Agile", BALLCARRIER: "", RELEASE: "WR_Sig_Start_StefonDiggs", CUTMOVE: "", LINK: "https://www.mut.gg/players/?name=Stefon+Diggs&market=5"},
+      {PLAYER: "Mike Evans", PORTRAIT: "MikeEvans.png", POS: "WR", BODYTYPE: "Agile Tall", BALLCARRIER: "", RELEASE: "WR_Sig_Start_MikeEvans", CUTMOVE: "", LINK: "https://www.mut.gg/players/?name=Mike+Evans&market=5"},
+      {PLAYER: "Michael Thomas", PORTRAIT: "MichaelThomas.png", POS: "WR", BODYTYPE: "Agile", BALLCARRIER: "", RELEASE: "WR_Sig_Start_MichaelThomas", CUTMOVE: "", LINK: "https://www.mut.gg/players/?name=Michael+Thomas&market=5"},
+      {PLAYER: "Keenan Allen", PORTRAIT: "KeenanAllen.png", POS: "WR", BODYTYPE: "Agile", BALLCARRIER: "", RELEASE: "WR_Sig_Start_KeenanAllen", CUTMOVE: "", LINK: "https://www.mut.gg/players/?name=Keenan+Allen&market=5"},
+      {PLAYER: "Justin Jefferson", PORTRAIT: "JustinJefferson.png", POS: "WR", BODYTYPE: "Agile", BALLCARRIER: "", RELEASE: "WR_Sig_Start_JustinJefferson", CUTMOVE: "", LINK: "https://www.mut.gg/players/?name=Justin+Jefferson&market=5"},
+      {PLAYER: "Julio Jones", PORTRAIT: "JulioJones.png", POS: "WR", BODYTYPE: "Agile", BALLCARRIER: "", RELEASE: "WR_Sig_Start_JulioJones", CUTMOVE: "WR_Sig_CutMove_JulioJones", LINK: "https://www.mut.gg/players/?name=Julio+Jones&market=5"},
+      {PLAYER: "DK Metcalf", PORTRAIT: "DKMetcalf.png", POS: "WR", BODYTYPE: "Agile Tall", BALLCARRIER: "", RELEASE: "WR_Sig_Start_DKMetcalf", CUTMOVE: "WR_Sig_CutMove_DKMetcalf", LINK: "https://www.mut.gg/players/?name=DK+Metcalf&market=5"},
+      {PLAYER: "Davante Adams", PORTRAIT: "DavanteAdams.png", POS: "WR", BODYTYPE: "Agile", BALLCARRIER: "", RELEASE: "WR_Sig_Start_DavanteAdams", CUTMOVE: "WR_Sig_CutMove_DevanteAdams", LINK: "https://www.mut.gg/players/?name=Davante+Adams&market=5"},
+      {PLAYER: "Deandre Hopkins", PORTRAIT: "DeAndreHopkins.png", POS: "WR", BODYTYPE: "Agile", BALLCARRIER: "", RELEASE: "WR_Sig_Start_DeandreHopkins", CUTMOVE: "WR_Sig_CutMove_DeandreHopkins", LINK: "https://www.mut.gg/players/?name=Deandre+Hopkins&market=5"}
     ];
 
     const positionSelect = document.getElementById("position");
     const tableHeaders = document.getElementById("tableHeaders");
     const tableBody = document.getElementById("tableBody");
-
     let currentSort = { key: null, asc: true };
 
     function renderTable(pos) {
       tableHeaders.innerHTML = "";
-      tableBody.innerHTML = "";
-
       const headers = statsConfig[pos];
-      headers.forEach((h) => {
+      headers.forEach(h => {
         const th = document.createElement("th");
         th.textContent = h;
-        th.addEventListener("click", () => sortTable(h));
+        th.onclick = () => sortTable(h);
         tableHeaders.appendChild(th);
       });
-
       updateTableRows(pos, headers);
     }
 
     function updateTableRows(pos, headers) {
       tableBody.innerHTML = "";
       let filtered = sampleData.filter(p => p.POS === pos);
-
-      // Apply sorting
       if (currentSort.key) {
-        const key = currentSort.key;
-        const asc = currentSort.asc;
         filtered.sort((a, b) => {
-          let valA = a[key] ?? "", valB = b[key] ?? "";
-          if (typeof valA === "string") valA = valA.toUpperCase();
-          if (typeof valB === "string") valB = valB.toUpperCase();
-          if (valA < valB) return asc ? -1 : 1;
-          if (valA > valB) return asc ? 1 : -1;
-          return 0;
+          let vA = (a[currentSort.key] || "").toUpperCase();
+          let vB = (b[currentSort.key] || "").toUpperCase();
+          return currentSort.asc ? vA.localeCompare(vB) : vB.localeCompare(vA);
         });
       }
 
       filtered.forEach(player => {
         const tr = document.createElement("tr");
-
-        // If player has link, make row clickable
         if (player.LINK) {
+          tr.onclick = (e) => {
+            if (!e.target.closest('.info-icon')) window.open(player.LINK, "_blank");
+          };
           tr.style.cursor = "pointer";
-          tr.addEventListener("click", () => {
-            window.open(player.LINK, "_blank");
-          });
         }
-
         headers.forEach(h => {
           const td = document.createElement("td");
           if (h === "PLAYER") {
             td.classList.add("player-portrait");
-            if (player.LINK) {
-              td.innerHTML = `
-                <a href="${player.LINK}" target="_blank">
-                  <img src="${player.PORTRAIT}" alt="${player.PLAYER}">
-                  ${player.PLAYER}
-                </a>
-              `;
-            } else {
-              td.innerHTML = `<img src="${player.PORTRAIT}" alt="${player.PLAYER}"> ${player.PLAYER}`;
-            }
+            td.innerHTML = `<img src="${player.PORTRAIT}"> ${player.PLAYER}`;
           } else {
-            td.textContent = player[h] ?? "-";
+            const val = player[h] || "";
+            if (val && val !== "-") {
+              const desc = animDescriptions[val] || animDescriptions["default"];
+              // Logic check: only add info-icon if it's NOT the POS column
+              if (h === "POS") {
+                td.textContent = val;
+              } else {
+                td.innerHTML = `
+                  <div class="cell-content">
+                    <span class="stat-text">${val}</span>
+                    <div class="info-icon">i<span class="ui-popup">${desc}</span></div>
+                  </div>`;
+              }
+            } else {
+              td.textContent = "-";
+            }
           }
           tr.appendChild(td);
         });
@@ -278,22 +366,12 @@
     }
 
     function sortTable(key) {
-      if (currentSort.key === key) {
-        currentSort.asc = !currentSort.asc;
-      } else {
-        currentSort.key = key;
-        currentSort.asc = true;
-      }
-      updateTableRows(positionSelect.value, statsConfig[positionSelect.value]);
+      currentSort = { key, asc: currentSort.key === key ? !currentSort.asc : true };
+      renderTable(positionSelect.value);
     }
 
-    positionSelect.addEventListener("change", e => {
-      currentSort = { key: null, asc: true };
-      renderTable(e.target.value);
-    });
-
-    // Initial load
-    renderTable(positionSelect.value);
+    positionSelect.onchange = (e) => renderTable(e.target.value);
+    renderTable("QB");
   </script>
 </body>
 </html>
